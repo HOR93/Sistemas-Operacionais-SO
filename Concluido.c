@@ -5,8 +5,8 @@
 int main(){
   int Data[100], duracao[100], tempo[100], N_Processos;  // variaveis responsaveis pela inicialização do simulador
   int Fila_Processos[100], proximo_a_executar = 0, proximo_a_adicionar = 0;// Fila de processos prontos e variaveis dos futuros processos
-  int tmax = 0, t = 0, tarefa_em_execucao = -1, tempo_em_execucao = 0, contador_trocas = 0; // variaveis do loop principal
-  int Tempo_TOTAL= t, Tempo_TOTAL_retorno = 0; // variaveis com relação as medias.
+  int tmax = 0, t = 0, Processo_em_execucao = -1, tempo_em_execucao = 0, contador_trocas = 0; // variaveis do loop principal
+  int Tempo_TOTAL_retorno = 0, Tempo_Conclusao[100] = {0}; // variaveis com relação as medias e variavel de conclusão considera o tempo de cada processo.
 
   // Entrada do simulador
   do {
@@ -31,8 +31,8 @@ int main(){
   }
 
   //cabecalho
-  printf("\nCabeçalho de execucao"); // cabeçalho do simulador que preenche pra cada Processo do usuario
-  printf("\ntempo   ");           // para ficar no formato desejado no trabalho
+  printf("\nDiagrama"); // cabeçalho do simulador que preenche pra cada Processo do usuario
+  printf("\ntempo   ");           
   switch (N_Processos) {
     case 0:
         printf("(Nenhum processo)\n");
@@ -45,15 +45,18 @@ int main(){
         break;
   }
 
+//#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+
   //while determina se enquanto ainda tem um processo com tempo, rodando ou na fila
-  while (t < tmax || tarefa_em_execucao != -1 || proximo_a_executar < proximo_a_adicionar){
-    if(tarefa_em_execucao != -1){ // se ainda tem processo no momento
-      if (tempo[tarefa_em_execucao] == 0){ // se o processo terminou
-        tarefa_em_execucao = -1; // libera o simulador para novo processo
+  while (t < tmax || Processo_em_execucao != -1 || proximo_a_executar < proximo_a_adicionar){
+    if(Processo_em_execucao != -1){ // se ainda tem processo no momento
+      if (tempo[Processo_em_execucao] == 0){ // se o processo terminou
+        Tempo_Conclusao[Processo_em_execucao] = t; //Armazena o tempo de cada processo no simulador e salva o tempo atual com da conclusão
+        Processo_em_execucao = -1; // libera o simulador para novo processo
         tempo_em_execucao = 0; // zera o tempo dele
       } else if (tempo_em_execucao == QUANTUM) { // se o processo atingiu o limite do quantum
-        Fila_Processos[proximo_a_adicionar++] = tarefa_em_execucao;
-        tarefa_em_execucao = -1; // libera o simulador para novo processo
+        Fila_Processos[proximo_a_adicionar++] = Processo_em_execucao;
+        Processo_em_execucao = -1; // libera o simulador para novo processo
         tempo_em_execucao = 0;  // zera o tempo dele
         contador_trocas++; // incrementa para um novo processo
       }
@@ -65,10 +68,12 @@ int main(){
       }
     }
 
-    if (tarefa_em_execucao == -1 && proximo_a_executar < proximo_a_adicionar){ // condição pra ver se tem algum processo ou se ainda tem algum na fila  
-      tarefa_em_execucao = Fila_Processos[proximo_a_executar++]; // tira o proximo da fila e bota ele como atual
+    if (Processo_em_execucao == -1 && proximo_a_executar < proximo_a_adicionar){ // condição pra ver se tem algum processo ou se ainda tem algum na fila  
+      Processo_em_execucao = Fila_Processos[proximo_a_executar++]; // tira o proximo da fila e bota ele como atual
       tempo_em_execucao = 0;  // zero o tempo do novo processo
     }
+
+//#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
 
     //Imprimir o estado dos processos no simulador
     printf("%2d- %2d  ", t, t + 1); // espaçamento para ficar adequado no terminal
@@ -80,7 +85,7 @@ int main(){
             estado_atual = 0; // se a processo terminou
         } else if (Data[i] > t) {
             estado_atual = 1; // se o processo ainda não entrou como atual
-        } else if (i == tarefa_em_execucao) {
+        } else if (i == Processo_em_execucao) {
             estado_atual = 2; // se ainda ta acontecendo
         } else {
             estado_atual = 3; // se ainda ta na fila
@@ -88,36 +93,38 @@ int main(){
 
         switch (estado_atual) {
             case 0:
-                printf("    "); // Tarefa já terminou
+                printf("    "); // processo já terminou
                 break;
             case 1:
-                printf("--  "); // Tarefa ainda não chegou
+                printf("--  "); // processo ainda não chegou
                 break;
             case 2:
-                printf("##  "); // Tarefa está rodando
+                printf("##  "); // processo está rodando
                 break;
-            default:
-                printf("    ");
+            default:        
+                printf("--  "); // se não for igual aos outros, logo ainda não chegou/terminou
                 break;
         }
     }
     printf("\n");
 
     t++; 
-    if (tarefa_em_execucao != -1) { // se tiver um processo rodando..
-        tempo[tarefa_em_execucao]--; // decremento o tempo que resta do processo atual que esta em execução
-        tempo_em_execucao++; // aqui ele finaliza incrementando o processo que ta rodando no quantum
+    if (Processo_em_execucao != -1) { // se tiver um processo rodando..
+        tempo[Processo_em_execucao]--; // decremento o tempo que resta do processo em execucao
+        tempo_em_execucao++; // aqui ele incrementa o tempo que o processo esta rodando no quantum
     }
   }
 
+//#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-
+
   for (int i = 0; i< N_Processos; i++) {
-      Tempo_TOTAL_retorno += Tempo_TOTAL - Data[i]; // soma o tempo total de retorno dos processos - tempo de criação de cada processo
+      Tempo_TOTAL_retorno+= Tempo_Conclusao[i] - Data[i]; // para o turnaround, soma o tempo total de conclusão dos processos - tempo de criação de cada processo
   }
 
     int Media_Retorno= Tempo_TOTAL_retorno / N_Processos;
 
     printf("\nTempo medio de retorno no simulador: %d\n", Media_Retorno);
-    printf("Numero total de trocas: %d\n", contador_trocas);  
+    printf("Numero total de trocas: %d\n", contador_trocas);
 
     return 0;
 }
